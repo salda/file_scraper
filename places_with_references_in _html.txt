@@ -1,0 +1,35 @@
+HTML version is 5
+according to html.spec.whatwg.org and w3.org I found tags potentially cotaining file references
+all other sources were very incorrect
+
+obsolete
+archive <applet archive=url1,url2,url3> <object archive="url1 url2 url3"> => tag applet is obsolete and archive on <object> is not in HTML5
+background <body> => not in HTML5
+classid <object> => not in HTML5
+code => not in HTML5
+codebase => not in HTML5
+icon => not in HTML5
+longdesc => not in HTML5
+profile => not in HTML5
+usemap <img; object> => not longer URI
+
+standart HTML, but URL not a file
+itemid <HTML elements> Valid URL potentially surrounded by spaces => in fact URI is valid
+itemprop <HTML elements> Unordered set of unique space-separated tokens, case-sensitive, consisting of valid absolute URLs, defined property names, or text*
+itemtype <HTML elements> Unordered set of unique space-separated tokens, case-sensitive, consisting of valid absolute URL*
+ping <a; area> Set of space-separated tokens consisting of valid non-empty URLs
+
+standart HTML
+action <form> Valid non-empty URL potentially surrounded by spaces
+cite <blockquote; del; ins; q> Valid URL potentially surrounded by spaces
+data <object> Valid non-empty URL potentially surrounded by spaces
+formaction <button; input> Valid non-empty URL potentially surrounded by spaces
+href <a; area; base> Valid non-empty URL potentially surrounded by spaces
+href <link> Valid non-empty URL potentially surrounded by spaces
+manifest <html> Valid non-empty URL potentially surrounded by spaces
+poster <video> Valid non-empty URL potentially surrounded by spaces
+src <audio; embed; iframe; img; input; script; source; track; video> Valid non-empty URL potentially surrounded by spaces
+srcset="url1 resolution1, url2 resolution2" <img; source> Comma-separated list of image candidate strings
+
+standart CSS contained in HTML
+style="property: url(<filename>) property: url(<filename>)" <HTML elements>

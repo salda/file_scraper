@@ -1,0 +1,12 @@
+the assignment is vague, there should be at least specified what "every file the page references" means
+HTTP is the default protocol for the web so http://www.meetangee.com is used
+the redirection is needed, http://www.meetangee.com redirects to https://www.meetangee.com
+there could have been man in the middle while using HTTP and NSS doesn't setup certificates automatically I rather not verify the authenticity of the peer's certificate
+possible to call curl_easy_unescape for URLs, but not needed for this assignment
+
+on the first look, Adler-32 looks like from stone age and the zlib implementation looks strange
+a needs at least 256 iterations to overflow 65521, 257 when starting from "1"
+b can overflow every iteration when a is 65520 and new chars are 0
+b overflow can be count at the end, because "unsigned long long int" is big enough to store the whole b without using modulo
+
+I would use headers, but I think it would be an overkill for this assignment. 
