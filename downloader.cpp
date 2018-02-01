@@ -76,8 +76,8 @@ public:
       throw std::runtime_error("failed to construct");
     }
     curl_easy_setopt(cURL_for_copying, CURLOPT_FOLLOWLOCATION, 1L);
-	  curl_easy_setopt(cURL_for_copying, CURLOPT_SSL_VERIFYPEER, 0L);
-   	curl_easy_setopt(cURL_for_copying, CURLOPT_WRITEFUNCTION, CurlWrite_CallbackFunc_File);
+    curl_easy_setopt(cURL_for_copying, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(cURL_for_copying, CURLOPT_WRITEFUNCTION, CurlWrite_CallbackFunc_File);
   }
 
   void download_file(const string& URL) {
@@ -101,7 +101,7 @@ public:
       delete_file(new_file_name, DL);
     }
     else {
-  	  long respCode;
+      long respCode;
       curl_easy_getinfo(DL->cURL, CURLINFO_RESPONSE_CODE, &respCode);
       if (respCode != 200) {
         cout << "response code from " + URL + ": " + to_string(respCode) << endl;
