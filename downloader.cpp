@@ -44,7 +44,7 @@ class downloader { // TODO make singleton?
     size_t additional_size = element_size * element_count;
     download->download_file.write((char*)contents, additional_size);
     size_t processed_size = 0;
-    do { // TODO optimize more?
+    do {
       size_t last_element = min(processed_size + download->minimum_iterations_for_overflow, additional_size);
       for (size_t i = processed_size; i != last_element; ++i) {
         download->Adler_32_a += ((unsigned char*)contents)[i];
@@ -52,11 +52,11 @@ class downloader { // TODO make singleton?
       }
       processed_size = last_element;
       if (download->Adler_32_a >= largest_short_int_prime_number) {
-        download->Adler_32_a %= largest_short_int_prime_number;
+        download->Adler_32_a -= largest_short_int_prime_number;
         download->minimum_iterations_for_overflow = download->Adler_32_a > 240 ? 256 : 257;
       }
       else
-        download->minimum_iterations_for_overflow = ceil((largest_short_int_prime_number - download->Adler_32_a) / 255.0);
+        download->minimum_iterations_for_overflow = (largest_short_int_prime_number - download->Adler_32_a + 254) / 255;
     } while (processed_size != additional_size);
     download->size += additional_size;
     return additional_size;
