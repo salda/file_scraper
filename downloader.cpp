@@ -20,11 +20,11 @@ struct download {
   download(const string file_name, const string& new_file_name, CURL* file_cURL) : file_name(file_name), download_file("download/" + new_file_name), cURL(file_cURL) {
     if (!cURL) {
       cout << "cURL not duplicated correctly" << endl;
-      throw std::runtime_error("failed to duplicate cURL");
+      throw runtime_error("failed to duplicate cURL");
     }
     if (!download_file) {
       cout << "Error opening " << new_file_name << endl;
-      throw std::runtime_error("failed to open file");
+      throw runtime_error("failed to open file");
     }
   }
 
@@ -73,7 +73,7 @@ public:
     cURL_for_copying = curl_easy_init();
     if (!cURL_for_copying) {
       cout << "cURL not initialized correctly" << endl;
-      throw std::runtime_error("failed to construct");
+      throw runtime_error("failed to construct");
     }
     curl_easy_setopt(cURL_for_copying, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(cURL_for_copying, CURLOPT_SSL_VERIFYPEER, 0L);

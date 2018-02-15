@@ -85,8 +85,9 @@ public:
   }
 
   void find_and_download_files() {
-    if (!experimental::filesystem::create_directory("download/"))
-      cout << "problem creating directory" << endl; // TODO don't output for existing directory
+    if ((!experimental::filesystem::exists("download") && !experimental::filesystem::create_directory("download")) // I want to delete neither the files inside possibly existing folder
+    || (experimental::filesystem::exists("download") && !experimental::filesystem::is_directory("download")))      // nor file with a name "download"
+      throw runtime_error("problem creating directory \"download\" for downloading files");
     const array<const string, 8> attributes_with_file_references { "action", "cite", "data", "formaction", "href", "manifest", "poster", "src" };
     for (const string& attribute : attributes_with_file_references)
       iterate_attributes_with_key_and_download_files(attribute, with_possible_URL);
