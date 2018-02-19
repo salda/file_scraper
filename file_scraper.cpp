@@ -32,6 +32,7 @@ int main(int argc, char* argv[]) {
       downloader.wait_for_running_downloads();
     }
   } catch (const exception& e) {
+    cout << e.what() << endl;
     return -1;
   }
 

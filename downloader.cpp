@@ -131,7 +131,7 @@ public:
   }
 
   void start_download(const string& URL) {
-    started_downloads.emplace_back(async(launch::async, [&] { download_file(move(URL)); } ));
+    started_downloads.emplace_back(async(launch::async, [=] { download_file(move(URL)); } ));
   }
 
   void wait_for_running_downloads() {
