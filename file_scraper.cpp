@@ -1,9 +1,19 @@
 #include "parser.cpp"
 #include "response_getter.cpp"
 
+downloader initialize_downloads(char* URL) {
+    response_getter response_getter(URL);
+    const string response_body = response_getter.get_response();
+
+    parser parser(response_body);
+    parser.set_relative_URL_bases(response_getter.get_effective_URL());
+    
+    return parser.start_downloading_referenced_files();
+}
+
 int main(int argc, char* argv[]) {
   if (!argv[1] || !strlen(argv[1])) {
-    cout << "Usage: " + string(argv[0]) + " <URL>" << endl;
+    cout << "Usage: " + string(argv[0]) + " <HTML5_valid_source_URL>" << endl;
     cin.sync();
     cin.ignore();
     return 0;
@@ -13,15 +23,14 @@ int main(int argc, char* argv[]) {
     cout << "cURL global not initialized correctly" << endl;
     cin.sync();
     cin.ignore();
+    return -1;
   }
 
   try {
-    response_getter response_getter(argv[1]);
-    const string response_body = response_getter.get_response();
-
-    parser parser(response_body);
-    parser.set_relative_URL_bases(response_getter.get_effective_URL());
-    parser.find_and_download_files(); // TODO separate downloader from parser so downloads will be called from downloader instance
+    while (true) {
+      downloader downloader = initialize_downloads(argv[1]);
+      downloader.wait_for_running_downloads();
+    }
   } catch (const exception& e) {
     return -1;
   }

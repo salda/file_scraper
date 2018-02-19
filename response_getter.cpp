@@ -3,15 +3,16 @@
 
 using namespace std;
 
-class response_getter { // TODO make singleton?
+class response_getter {
   CURL* cURL;
   char* URL;
 
-  static size_t CurlWrite_CallbackFunc_String(void* contents, size_t element_size, size_t element_count, string* output) {
+  size_t (*CurlWrite_CallbackFunc_String)(void*, size_t, size_t, string*) = 
+  [](void* contents, size_t element_size, size_t element_count, string* output) {
     size_t additional_size = element_size * element_count;
     output->append((char*)contents, additional_size);
     return additional_size;
-  }
+  };
 
 public:
   response_getter(char* URL) : URL(URL) {
@@ -51,7 +52,7 @@ public:
     return response_body;
   }
 
-  string get_effective_URL() { // TODO handle that it can be called before get_response
+  string get_effective_URL() {
     char* URL = NULL;
     curl_easy_getinfo(cURL, CURLINFO_EFFECTIVE_URL, &URL);
     if (!URL)

@@ -1,28 +1,29 @@
 #include <myhtml/api.h>
 #include "downloader.cpp"
-#include <thread>
 #include <experimental/filesystem>
 
-class parser { // TODO make singleton?
+using namespace experimental::filesystem;
+
+class parser {
   myhtml_t* myHTML;
   myhtml_tree_t* tree;
   string relative_URL_base, relative_URL_base_root;
-  downloader DLer; // TODO make lazy_loaded on first download and move away from parser => probably best way is to make downloader singleton
   enum attribute_types { with_possible_URL, with_possible_comma_separated_URLs, with_CSS_possibly_containing_URLs_in_url_data_type };
   unordered_set<string> URLs;
-  vector<thread> threads;
   
-  void iterate_attributes_with_key_and_download_files(const string& attribute, attribute_types attribute_type = with_possible_URL) {
+  void iterate_attribute_occurrences_and_possibly_start_downloading(downloader& downloader, const string& attribute, attribute_types attribute_type = with_possible_URL) {
     myhtml_collection_t* tag_collection = myhtml_get_nodes_by_attribute_key(tree, NULL, NULL, attribute.c_str(), attribute.size(), NULL);
+
     if (tag_collection && tag_collection->list && tag_collection->length)
       for (size_t i = 0; i < tag_collection->length; ++i) {
         string attribute_value = myhtml_attribute_value(myhtml_attribute_by_key(tag_collection->list[i], attribute.c_str(), strlen(attribute.c_str())), NULL);
+
         if (attribute_type == with_CSS_possibly_containing_URLs_in_url_data_type) {
           size_t url_pos = attribute_value.find("url(");
           while (url_pos != string::npos) {
             size_t url_end_bracket_pos = attribute_value.find(')', url_pos + 4);
             int url_escaped = attribute_value[url_pos + 4] == '"' || attribute_value[url_pos + 4] == '\'' ? 1 : 0; // TODO maybe add range check
-            construct_absolute_URL_and_download_file(attribute_value.substr(url_pos + 4 + url_escaped, url_end_bracket_pos - url_pos - 4 - 2 * url_escaped));
+            construct_absolute_URL_and_possibly_start_downloading(downloader, attribute_value.substr(url_pos + 4 + url_escaped, url_end_bracket_pos - url_pos - 4 - 2 * url_escaped));
             url_pos = attribute_value.find("url(", url_end_bracket_pos + 1);
           }
         }
@@ -30,17 +31,18 @@ class parser { // TODO make singleton?
           size_t url_pos = attribute_value.find_first_not_of(' ');
           do {
             size_t url_end_pos = attribute_value.find_first_of(" ,", url_pos + 1);
-            construct_absolute_URL_and_download_file(attribute_value.substr(url_pos, url_end_pos - url_pos));
+            construct_absolute_URL_and_possibly_start_downloading(downloader, attribute_value.substr(url_pos, url_end_pos - url_pos));
             url_pos = attribute_value.find_first_not_of(' ', attribute_value.find(',', url_end_pos) + 1);
           } while (url_pos != string::npos);
         }
         else
-          construct_absolute_URL_and_download_file(move(attribute_value.erase(0, attribute_value.find_first_not_of(' '))));
+          construct_absolute_URL_and_possibly_start_downloading(downloader, move(attribute_value.erase(0, attribute_value.find_first_not_of(' '))));
       }
+
     myhtml_collection_destroy(tag_collection);
   }
 
-  void construct_absolute_URL_and_download_file(string URL) {
+  void construct_absolute_URL_and_possibly_start_downloading(downloader& downloader, string URL) {
     size_t pos = URL.find_first_of(" #?");
     if (pos != string::npos)
       URL.erase(pos);
@@ -55,9 +57,10 @@ class parser { // TODO make singleton?
       URL.insert(0, relative_URL_base_root);
     else // not sure if cURL handles ".." inside URLs, but I guess it's not relevant
       URL.insert(0, relative_URL_base);
+
     auto return_value = URLs.insert(move(URL));
     if (return_value.second)
-      threads.push_back(thread( [=] { DLer.download_file(*return_value.first); } ));
+      downloader.start_download(*return_value.first);
   }
 
 public:
@@ -66,9 +69,11 @@ public:
     myhtml_init(myHTML, MyHTML_OPTIONS_DEFAULT, 1, 0);
     tree = myhtml_tree_create();
     myhtml_tree_init(tree, myHTML);
+
     myencoding_t encoding;
     if (!myencoding_detect(HTML.c_str(), HTML.size(), &encoding))
       encoding = MyENCODING_UTF_8;
+
     myhtml_parse(tree, encoding, HTML.c_str(), HTML.size());
   }
 
@@ -79,22 +84,25 @@ public:
       if (base_href_attribute)
         effective_URL = myhtml_attribute_value(base_href_attribute, NULL);
     }
+
     myhtml_collection_destroy(base_tag_collection);
     relative_URL_base_root = effective_URL.substr(0, effective_URL.find('/', effective_URL.find("//") + 2));
     relative_URL_base = effective_URL;
   }
 
-  void find_and_download_files() {
-    if ((!experimental::filesystem::exists("download") && !experimental::filesystem::create_directory("download")) // I want to delete neither the files inside possibly existing folder
-    || (experimental::filesystem::exists("download") && !experimental::filesystem::is_directory("download")))      // nor file with a name "download"
+  downloader start_downloading_referenced_files() {
+    if ((!exists("download") && !create_directory("download")) // I want to delete neither the files inside possibly existing folder
+    || (exists("download") && !is_directory("download")))      // nor file with a name "download"
       throw runtime_error("problem creating directory \"download\" for downloading files");
-    const array<const string, 8> attributes_with_file_references { "action", "cite", "data", "formaction", "href", "manifest", "poster", "src" };
-    for (const string& attribute : attributes_with_file_references)
-      iterate_attributes_with_key_and_download_files(attribute, with_possible_URL);
-    iterate_attributes_with_key_and_download_files("srcset", with_possible_comma_separated_URLs);
-    iterate_attributes_with_key_and_download_files("style", with_CSS_possibly_containing_URLs_in_url_data_type);
-    for (thread& thread : threads)
-      thread.join();
+
+    downloader downloader;
+
+    for (const string& attribute : { "action", "cite", "data", "formaction", "href", "manifest", "poster", "src" })
+      iterate_attribute_occurrences_and_possibly_start_downloading(downloader, attribute, with_possible_URL);
+    iterate_attribute_occurrences_and_possibly_start_downloading(downloader, "srcset", with_possible_comma_separated_URLs);
+    iterate_attribute_occurrences_and_possibly_start_downloading(downloader, "style", with_CSS_possibly_containing_URLs_in_url_data_type);
+
+    return downloader;
   }
 
   ~parser() {
