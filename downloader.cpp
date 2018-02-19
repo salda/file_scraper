@@ -75,7 +75,7 @@ class downloader {
     successful_downloads.remove(*DL);
   }
 
-  void download_file(const string URL) { // TODO maybe add mutex
+  void download_file(const string URL) {
     const string old_file_name = URL.substr(URL.find_last_of('/') + 1);
     auto return_value = file_names.insert(old_file_name);
 
