@@ -1,7 +1,6 @@
 #include <fstream>
 #include <forward_list>
 #include <unordered_set>
-#include <cmath>
 #include <iomanip>
 #include <curl/curl.h>
 #include <iostream>

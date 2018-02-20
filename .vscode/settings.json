@@ -47,7 +47,8 @@
         "ratio": "cpp",
         "string": "cpp",
         "cstring": "cpp",
-        "future": "cpp"
+        "future": "cpp",
+        "unordered_set": "cpp"
     },
     "C_Cpp.intelliSenseEngineFallback": "Disabled",
     "C_Cpp.errorSquiggles": "Enabled"
