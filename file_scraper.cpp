@@ -27,10 +27,8 @@ int main(int argc, char* argv[]) {
   }
 
   try {
-    while (true) {
-      downloader downloader = initialize_downloads(argv[1]);
-      downloader.wait_for_running_downloads();
-    }
+    downloader downloader = initialize_downloads(argv[1]);
+    downloader.wait_for_running_downloads();
   } catch (const exception& e) {
     cout << e.what() << endl;
     return -1;
